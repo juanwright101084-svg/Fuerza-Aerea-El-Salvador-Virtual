@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAS Virtual — Escuadrón de Repaints</title>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0A1826;
+    --navy-2:#12233A;
+    --panel:#16283E;
+    --rivet:#3A4A5C;
+    --amber:#E8A33D;
+    --amber-dim:#8A6425;
+    --paper:#E7DFC6;
+    --paper-2:#DED2AC;
+    --blue:#1D5FD1;
+    --ink:#0A1826;
+    --off:#EDE9DC;
+    --danger:#B5482E;
+    --ok:#4C8B5C;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--navy);
+    color:var(--off);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+    overflow-x:hidden;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  h1,h2,h3,.display{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  a{color:inherit;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  /* riveted panel texture */
+  .riveted{
+    position:relative;
+    border:1px solid var(--rivet);
+    background:linear-gradient(180deg, var(--panel), var(--navy-2));
+  }
+  .riveted::before, .riveted::after{
+    content:"";
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #7c8b9c, #263242 70%);
+    box-shadow:0 0 0 1px rgba(0,0,0,.4);
+  }
+  .riveted::before{top:8px; left:8px;}
+  .riveted::after{top:8px; right:8px;}
+  .riveted .rivet-bl, .riveted .rivet-br{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #7c8b9c, #263242 70%);
+    box-shadow:0 0 0 1px rgba(0,0,0,.4);
+    bottom:8px;
+  }
+  .riveted .rivet-bl{left:8px;}
+  .riveted .rivet-br{right:8px;}
+
+  /* ===== NAV ===== */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(10,24,38,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--rivet);
+  }
+  nav.wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:64px;
+    position:relative;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-family:'Oswald'; font-size:18px; letter-spacing:.08em;}
+  .brand .roundel{
+    width:44px; height:44px; border-radius:50%;
+    object-fit:cover;
+  }
+  nav ul{list-style:none; display:flex; gap:28px; font-size:13px; letter-spacing:.08em; text-transform:uppercase;}
+  nav ul a{text-decoration:none; color:var(--off); opacity:.8; transition:opacity .2s, color .2s; padding-bottom:4px; border-bottom:2px solid transparent;}
+  nav ul a:hover{opacity:1; color:var(--amber); border-color:var(--amber);}
+  .nav-toggle{display:none; background:none; border:1px solid var(--rivet); color:var(--off); font-size:20px; padding:6px 10px; cursor:pointer;}
+
+  /* ===== HERO ===== */
+  .hero{
+    position:relative;
+    padding:120px 0 90px;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(29,95,209,0.25), transparent 55%),
+      radial-gradient(ellipse at 90% 0%, rgba(232,163,61,0.12), transparent 45%),
+      var(--navy);
+    border-bottom:1px solid var(--rivet);
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size:38px 38px;
+    pointer-events:none;
+  }
+  .hero-grid{
+    position:relative; z-index:2;
+    display:grid; grid-template-columns:1.15fr 0.85fr; gap:56px; align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono'; font-size:12px; letter-spacing:.12em;
+    color:var(--amber); text-transform:uppercase;
+    border:1px solid var(--amber-dim); padding:5px 10px;
+    margin-bottom:22px;
+  }
+  .eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--amber); box-shadow:0 0 8px var(--amber);}
+  .hero h1{
+    font-size:clamp(40px, 6vw, 68px);
+    line-height:1.18;
+    color:var(--off);
+  }
+  .hero h1 span{color:var(--amber);}
+  .hero p.lede{
+    margin-top:22px; font-size:17px; max-width:52ch; color:#C9D2DC;
+  }
+  .hero-ctas{margin-top:34px; display:flex; gap:14px; flex-wrap:wrap;}
+  .compat-badges{
+    margin-top:32px; padding-top:24px; border-top:1px solid var(--rivet);
+    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+  }
+  .compat-label{
+    font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:#7E8CA0;
+  }
+  .compat-badges img{height:50px; width:auto; opacity:0.92; transition:opacity .2s;}
+  .compat-badges img:hover{opacity:1;}
+  .compat-badges .badge-tacpack{height:62px;}
+  .btn{
+    font-family:'IBM Plex Mono'; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+    padding:13px 22px; border:1px solid var(--amber); color:var(--navy);
+    background:var(--amber); text-decoration:none; cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 6px 0 0 var(--amber-dim);}
+  .btn.ghost{background:transparent; color:var(--off); border-color:var(--rivet);}
+  .btn.ghost:hover{border-color:var(--amber); color:var(--amber); box-shadow:none;}
+
+  /* dataplate hero graphic */
+  .dataplate{
+    padding:26px 24px;
+    font-family:'IBM Plex Mono';
+    font-size:12.5px;
+  }
+  .dataplate .dp-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom:1px dashed var(--rivet); padding-bottom:12px; margin-bottom:14px;
+  }
+  .dataplate .dp-head b{font-family:'Oswald'; font-size:15px; letter-spacing:.08em; color:var(--amber);}
+  .dp-row{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06); color:#B9C4D0;}
+  .dp-row span:last-child{color:var(--off);}
+  .dp-foot{margin-top:14px; padding-top:12px; border-top:1px dashed var(--rivet); font-size:11px; color:#7E8CA0;}
+
+  section{padding:90px 0;}
+  .section-head{margin-bottom:44px; max-width:680px;}
+  .section-head .eyebrow{margin-bottom:14px;}
+  .section-head h2{font-size:clamp(28px,4vw,40px); color:var(--off);}
+  .hazard-text{
+    background-image:repeating-linear-gradient(
+      -45deg,
+      #F2C230 0 14px,
+      #14100A 14px 28px
+    );
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    -webkit-text-stroke:1px rgba(0,0,0,0.15);
+  }
+  .section-head p{margin-top:14px; color:#B9C4D0; font-size:15.5px;}
+
+  /* ===== HISTORIA — flight log timeline ===== */
+  .historia{background:var(--paper); color:var(--ink);}
+  .historia .section-head p{color:#4A4636;}
+  .historia .eyebrow{color:var(--danger); border-color:#c98a76;}
+  .log{border-top:2px solid var(--ink);}
+  .log-entry{
+    display:grid; grid-template-columns:110px 1fr; gap:24px;
+    padding:22px 0; border-bottom:1px solid #C9BE96;
+  }
+  .log-entry .yr{font-family:'IBM Plex Mono'; font-weight:600; font-size:15px; color:var(--danger);}
+  .log-entry h3{font-size:18px; color:var(--ink); margin-bottom:6px; letter-spacing:.02em;}
+  .log-entry p{font-size:14.5px; color:#4A4636; max-width:65ch;}
+  .log-note{
+    margin-top:30px; padding:18px 20px; background:var(--paper-2); border-left:3px solid var(--danger);
+    font-size:13.5px; color:#4A4636;
+  }
+  .log-note b{color:var(--ink);}
+
+  /* ===== HANGAR / GALERIA ===== */
+  .hangar{background:var(--navy);}
+  .hangar-toolbar{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;
+    margin-bottom:32px;
+  }
+  .filter-tabs{display:flex; gap:8px; flex-wrap:wrap;}
+  .filter-tabs button{
+    font-family:'IBM Plex Mono'; font-size:12px; text-transform:uppercase; letter-spacing:.06em;
+    background:transparent; border:1px solid var(--rivet); color:#B9C4D0; padding:8px 14px; cursor:pointer;
+    transition:all .15s;
+  }
+  .filter-tabs button.active, .filter-tabs button:hover{border-color:var(--amber); color:var(--amber);}
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:22px;
+  }
+  .card{
+    display:flex; flex-direction:column;
+    padding:16px;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,0.35);}
+  .card .thumb{
+    width:100%; aspect-ratio:16/10; overflow:hidden; margin-bottom:14px;
+    background:#0d1c2c; border:1px solid var(--rivet);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .card .thumb img{
+    width:100%; height:100%; object-fit:contain;
+    transition:transform .35s ease;
+  }
+  .card .thumb:hover img{transform:scale(1.18);}
+  .card .thumb .ph{color:#3A4A5C; font-family:'IBM Plex Mono'; font-size:12px; text-align:center; padding:12px;}
+  .card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;}
+  .card h3{font-size:17px; color:var(--off); letter-spacing:.02em;}
+  .tag{
+    font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em;
+    padding:3px 8px; border:1px solid; white-space:nowrap;
+  }
+  .tag.disp{color:var(--ok); border-color:var(--ok);}
+  .tag.vendido{color:var(--danger); border-color:var(--danger);}
+  .tag.consulta{color:var(--amber); border-color:var(--amber-dim);}
+  .tag.intl{color:var(--blue); border-color:var(--blue);}
+  .card .reg{font-family:'IBM Plex Mono'; font-size:12px; color:#7E8CA0; margin-bottom:10px;}
+  .card p.desc{font-size:13.5px; color:#B9C4D0; margin-bottom:16px; flex:1;}
+  .card-foot{display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--rivet); padding-top:12px;}
+  .price{font-family:'IBM Plex Mono'; font-weight:600; font-size:18px; color:var(--amber);}
+  .card-foot .btn{padding:9px 16px; font-size:12px;}
+  .empty-state{
+    text-align:center; padding:70px 20px; border:1px dashed var(--rivet); color:#7E8CA0;
+    font-family:'IBM Plex Mono'; font-size:13px;
+  }
+
+  /* ===== ENCARGO / CONTACTO ===== */
+  .encargo{background:var(--navy-2); border-top:1px solid var(--rivet);}
+  .order-form{
+    padding:34px; display:grid; gap:18px;
+  }
+  .order-form .of-title{font-family:'IBM Plex Mono'; font-size:12px; color:var(--amber); letter-spacing:.1em; margin-bottom:6px;}
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-family:'IBM Plex Mono'; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#8FA0B3;}
+  .field input, .field textarea, .field select{
+    background:var(--navy); border:1px solid var(--rivet); color:var(--off);
+    padding:11px 12px; font-family:'IBM Plex Sans'; font-size:14px;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{outline:2px solid var(--amber); outline-offset:1px; border-color:var(--amber);}
+  .field textarea{resize:vertical; min-height:90px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+
+  .contact-info{display:flex; flex-direction:column; gap:18px;}
+  .contact-info .ci-item{display:flex; gap:14px; align-items:flex-start;}
+  .contact-info .ci-item .ic{
+    width:34px; height:34px; border:1px solid var(--amber-dim); color:var(--amber);
+    display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono'; font-size:13px; flex-shrink:0;
+  }
+  .contact-info h4{font-size:14px; color:var(--off); letter-spacing:.03em; margin-bottom:3px;}
+  .contact-info p{font-size:13px; color:#8FA0B3;}
+  .contact-info a{color:var(--amber); text-decoration:none;}
+
+  .admin-actions{display:flex; gap:12px; margin-top:18px; align-items:center;}
+
+  footer{
+    padding:40px 0; text-align:center; border-top:1px solid var(--rivet);
+    font-family:'IBM Plex Mono'; font-size:11.5px; color:#5C6B7D;
+  }
+
+  @media (max-width:860px){
+    .hero-grid{grid-template-columns:1fr;}
+    nav ul{
+      display:none;
+      position:absolute; top:64px; left:0; right:0;
+      flex-direction:column; gap:0;
+      background:rgba(10,24,38,0.98); border-bottom:1px solid var(--rivet);
+      padding:8px 24px 16px;
+    }
+    nav ul.open{display:flex;}
+    nav ul li{width:100%;}
+    nav ul a{display:block; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06) !important;}
+    .nav-toggle{display:block;}
+    .row2{grid-template-columns:1fr;}
+    .log-entry{grid-template-columns:70px 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <div class="brand"><img src="imagenes/fas_roundel.png" alt="Escarapela FAS" class="roundel"> FAS&nbsp;VIRTUAL</div>
+    <ul id="navLinks">
+      <li><a href="#historia">Historia</a></li>
+      <li><a href="#hangar">Hangar</a></li>
+      <li><a href="#encargo">Encargar livery</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> Escuadrón de simulación · No oficial · Fan project</div>
+      <h1>Repaints de la<br><span>Fuerza Aérea<br>Salvadoreña</span><br>para tu simulador.</h1>
+      <p class="lede">Liveries hechas a mano — textura DXT5, mapas de alfa cuidados, matrículas reales — para que vueles con los colores de El Salvador en tu simulador de vuelo. Además, la historia de la FAS contada como bitácora de vuelo.</p>
+      <div class="hero-ctas">
+        <a href="#hangar" class="btn">Ver el hangar ↓</a>
+        <a href="#encargo" class="btn ghost">Encargar un livery a medida</a>
+      </div>
+      <div class="compat-badges">
+        <span class="compat-label">Compatible con</span>
+        <img src="imagenes/tacview_final.png" alt="Tacview" class="badge-tacview">
+        <img src="imagenes/TP_logo_600_news.jpg" alt="TacPack" class="badge-tacpack">
+      </div>
+    </div>
+    <div class="dataplate riveted">
+      <span class="rivet-bl"></span><span class="rivet-br"></span>
+      <div class="dp-head"><b>DATA PLATE</b><span class="mono">MOD. 01</span></div>
+      <div class="dp-row"><span>Operador</span><span>FAS Virtual</span></div>
+      <div class="dp-row"><span>Base</span><span>El Salvador</span></div>
+      <div class="dp-row"><span>Fundado</span><span>2026</span></div>
+      <div class="dp-row"><span>Formatos</span><span>DXT5 · 4096²</span></div>
+      <div class="dp-row"><span>Compatibilidad</span><span>FSX / P3D</span></div>
+      <div class="dp-row"><span>Entrega</span><span>Descarga digital</span></div>
+      <div class="dp-foot">Proyecto independiente de aficionados. No representa ni está afiliado oficialmente a la Fuerza Aérea Salvadoreña.</div>
+    </div>
+  </div>
+</section>
+
+<section class="historia" id="historia">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow"><span class="dot" style="background:#B5482E;"></span> Bitácora</div>
+      <h2 style="color:#B5651D;">Un siglo de historia real, antes del pixel</h2>
+      <p>Antes de repintar una sola textura, vale la pena conocer la flota y la gente que inspiran este proyecto. Estos son algunos hitos reales de la Fuerza Aérea Salvadoreña.</p>
+    </div>
+    <div class="log">
+      <div class="log-entry">
+        <div class="yr">1923</div>
+        <div>
+          <h3>Nace la aviación militar salvadoreña</h3>
+          <p>El 20 de marzo de 1923 el presidente Alfonso Quiñónez Molina funda la Flotilla Aérea Salvadoreña. Meses después arranca el primer curso de aviación militar, y en 1924 se gradúan los dos primeros pilotos militares del país.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <div class="yr">1969</div>
+        <div>
+          <h3>La Guerra de las 100 Horas</h3>
+          <p>Corsairs y Mustangs de la FAS entran en combate durante el conflicto con Honduras, uno de los últimos enfrentamientos de la historia en usar de forma prominente cazas de pistón de la Segunda Guerra Mundial.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <div class="yr">1980s</div>
+        <div>
+          <h3>Llegan los A-37 Dragonfly</h3>
+          <p>Desde 1982 la FAS incorpora el Cessna (O)A-37 Dragonfly, que con los años se convierte en la flota de ataque ligero más numerosa de Centroamérica y en el avión más identificado con la institución.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <div class="yr">1998</div>
+        <div>
+          <h3>Huracán Mitch: puente aéreo humanitario</h3>
+          <p>El escuadrón de helicópteros pone más de veinte aeronaves al servicio del rescate nacional tras el paso de la tormenta tropical Mitch, además de apoyar con ayuda humanitaria a países vecinos.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <div class="yr">2023</div>
+        <div>
+          <h3>Centenario de la FAS</h3>
+          <p>Cien años después de su fundación, la institución celebra su historia con el A-37B Dragonfly como emblema de la ceremonia, en un acto que repasa la evolución completa de la fuerza aérea del país.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <div class="yr">Hoy</div>
+        <div>
+          <h3>FAS Virtual despega</h3>
+          <p>Este proyecto nace para llevar esos colores, matrículas y escuadrones a la comunidad de simulación de vuelo salvadoreña — con liveries hechas a mano, textura por textura.</p>
+        </div>
+      </div>
+    </div>
+    <div class="log-note"><b>Nota:</b> FAS Virtual es un proyecto independiente hecho por aficionados a la simulación de vuelo. No está afiliado, patrocinado ni respaldado oficialmente por la Fuerza Aérea Salvadoreña ni por la Fuerza Armada de El Salvador. Los datos históricos se citan con fines educativos y de homenaje.</div>
+  </div>
+</section>
+
+<section class="hangar" id="hangar">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow"><span class="dot"></span> Tienda</div>
+      <h2>El hangar</h2>
+      <p>Cada livery es un archivo de repintado digital para instalar sobre el modelo base correspondiente en tu simulador. La entrega es 100% digital, vía descarga tras la compra.</p>
+    </div>
+
+    <div class="hangar-toolbar">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="active" data-filter="all">Todos</button>
+        <button data-filter="disponible">Disponibles</button>
+        <button data-filter="consulta">Bajo consulta</button>
+        <button data-filter="vendido">Vendidos</button>
+        <button data-filter="internacional">Internacionales</button>
+      </div>
+    </div>
+
+    <div class="grid" id="galleryGrid"></div>
+  </div>
+</section>
+
+<section class="encargo" id="encargo">
+  <div class="wrap" style="display:grid; grid-template-columns:1.3fr 1fr; gap:30px;">
+    <div class="order-form riveted">
+      <span class="rivet-bl"></span><span class="rivet-br"></span>
+      <div class="of-title">ORDEN DE TRABAJO — ENCARGO DE LIVERY</div>
+      <h2 style="font-size:26px;">Encarga tu livery a medida</h2>
+      <p style="color:#B9C4D0; font-size:14px; margin-bottom:6px;">Cuéntame qué aeronave y matrícula quieres, y te confirmo tiempos, precio y si el modelo base permite venta comercial del repaint.</p>
+      <div class="row2">
+        <div class="field">
+          <label>Tu nombre</label>
+          <input type="text" id="oName" placeholder="Nombre completo">
+        </div>
+        <div class="field">
+          <label>WhatsApp o correo</label>
+          <input type="text" id="oContact" placeholder="Para responderte">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Aeronave / addon base</label>
+          <input type="text" id="oAircraft" placeholder="Ej. Carenado C337, PMDG, freeware...">
+        </div>
+        <div class="field">
+          <label>Simulador</label>
+          <input type="text" id="oSim" placeholder="FSX, P3D, MSFS...">
+        </div>
+      </div>
+      <div class="field">
+        <label>Detalles del encargo</label>
+        <textarea id="oDetails" placeholder="Matrícula deseada, escuadrón, referencias de fotos, plazos..."></textarea>
+      </div>
+      <div class="admin-actions">
+        <button class="btn" id="btnOrder">Enviar por WhatsApp</button>
+      </div>
+      <p style="font-size:11.5px; color:#5C6B7D; margin-top:6px;">Al enviar se abrirá WhatsApp con tu mensaje listo — no se guarda nada en este sitio.</p>
+    </div>
+
+    <div class="contact-info" id="contacto">
+      <div class="ci-item">
+        <div class="ic">W</div>
+        <div>
+          <h4>WhatsApp</h4>
+          <p><a href="#" id="waLink" target="_blank" rel="noopener noreferrer">Editar número en el código (CONFIG.whatsapp)</a></p>
+        </div>
+      </div>
+      <div class="ci-item">
+        <div class="ic">@</div>
+        <div>
+          <h4>Correo</h4>
+          <p><a href="#" id="mailLink">Editar correo en el código (CONFIG.email)</a></p>
+        </div>
+      </div>
+      <div class="ci-item">
+        <div class="ic">✈</div>
+        <div>
+          <h4>Marconi IT &amp; Aerospace Solutions</h4>
+          <p>Repaints, consultoría aeronáutica y desarrollo de software con integración de IA.</p>
+          <p><a href="https://marconiitaero.netlify.app/" target="_blank" rel="noopener noreferrer">marconiitaero.netlify.app</a></p>
+        </div>
+      </div>
+      <div class="ci-item">
+        <div class="ic">!</div>
+        <div>
+          <h4>Nota legal</h4>
+          <p>Los repaints se venden como textura únicamente. Requieren que el usuario posea legalmente el modelo/addon base.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    FAS VIRTUAL — Proyecto independiente de aficionados. No afiliado a la Fuerza Aérea Salvadoreña. © 2026
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
